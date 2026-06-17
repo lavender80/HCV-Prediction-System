@@ -101,19 +101,18 @@ with col2:
         min_value=0.0,
         value=80.0
     )
-
+    PROT = st.number_input(
+        "PROT",
+        min_value=0.0,
+        value=70.0
+    )
     GGT = st.number_input(
         "GGT",
         min_value=0.0,
         value=30.0
     )
 
-    PROT = st.number_input(
-        "PROT",
-        min_value=0.0,
-        value=70.0
-    )
-
+   
 # ==========================================================
 # PREDICTION BUTTON
 # ==========================================================
@@ -134,8 +133,8 @@ if st.button("Predict HCV Stage"):
             CHE,
             CHOL,
             CREA,
-            GGT,
-            PROT
+            PROT,
+            GGT
         ]],
         columns=[
             "ALB",
@@ -146,8 +145,8 @@ if st.button("Predict HCV Stage"):
             "CHE",
             "CHOL",
             "CREA",
-            "GGT",
-            "PROT"
+            "PROT",
+            "GGT"
         ]
     )
 
