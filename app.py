@@ -2,140 +2,121 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import matplotlib.pyplot as plt
+import plotly.express as px
 
-# ==========================================================
+# ======================================================
 # PAGE CONFIGURATION
-# ==========================================================
+# ======================================================
 
 st.set_page_config(
-    page_title="HCV Progression Prediction System",
+    page_title="HCV Progression Prediction",
     page_icon="🩺",
     layout="wide"
 )
 
-# ==========================================================
-# LOAD TRAINED MODEL
-# ==========================================================
+# ======================================================
+# LOAD MODEL FILES
+# ======================================================
 
-model = joblib.load("hcv_rf_model.pkl")
-scaler = joblib.load("scaler.pkl")
-label_encoder = joblib.load("label_encoder.pkl")
+model = joblib.load("xgboost_hcv_7biomarker.pkl")
+scaler = joblib.load("scaler_7biomarker.pkl")
+label_encoder = joblib.load("label_encoder_7biomarker.pkl")
 
-# ==========================================================
-# TITLE
-# ==========================================================
+# ======================================================
+# HEADER
+# ======================================================
 
 st.title("🩺 HCV Progression Prediction System")
 
 st.markdown("""
 This system predicts the progression stage of Hepatitis C Virus (HCV)
-using liver biomarker values and a Random Forest Machine Learning model.
+using seven liver biomarkers and an XGBoost machine learning model.
 
-### Disease Stages
-- Blood Donor
-- Suspect Blood Donor
-- Hepatitis
-- Fibrosis
-- Cirrhosis
+**Biomarkers Used:**
+- Albumin (ALB)
+- Alkaline Phosphatase (ALP)
+- Alanine Aminotransferase (ALT)
+- Aspartate Aminotransferase (AST)
+- Bilirubin (BIL)
+- Cholinesterase (CHE)
+- Gamma Glutamyl Transferase (GGT)
 """)
 
 st.divider()
 
-# ==========================================================
+# ======================================================
 # INPUT SECTION
-# ==========================================================
+# ======================================================
 
-st.header("Enter Patient Biomarker Values")
+st.subheader("Patient Liver Biomarker Information")
 
 col1, col2 = st.columns(2)
 
 with col1:
 
     ALB = st.number_input(
-        "ALB (Albumin)",
+        "Albumin (ALB)",
         min_value=0.0,
-        value=40.0
+        value=40.0,
+        step=0.1
     )
 
     ALP = st.number_input(
-        "ALP (Alkaline Phosphatase)",
+        "Alkaline Phosphatase (ALP)",
         min_value=0.0,
-        value=70.0
+        value=70.0,
+        step=0.1
     )
 
     ALT = st.number_input(
-        "ALT",
+        "Alanine Aminotransferase (ALT)",
         min_value=0.0,
-        value=30.0
+        value=30.0,
+        step=0.1
     )
 
     AST = st.number_input(
-        "AST",
+        "Aspartate Aminotransferase (AST)",
         min_value=0.0,
-        value=25.0
-    )
-
-    BIL = st.number_input(
-        "BIL (Bilirubin)",
-        min_value=0.0,
-        value=10.0
+        value=30.0,
+        step=0.1
     )
 
 with col2:
 
+    BIL = st.number_input(
+        "Bilirubin (BIL)",
+        min_value=0.0,
+        value=10.0,
+        step=0.1
+    )
+
     CHE = st.number_input(
-        "CHE",
+        "Cholinesterase (CHE)",
         min_value=0.0,
-        value=8.0
+        value=8.0,
+        step=0.1
     )
 
-    CHOL = st.number_input(
-        "CHOL",
-        min_value=0.0,
-        value=5.0
-    )
-
-    CREA = st.number_input(
-        "CREA",
-        min_value=0.0,
-        value=80.0
-    )
-    PROT = st.number_input(
-        "PROT",
-        min_value=0.0,
-        value=70.0
-    )
     GGT = st.number_input(
-        "GGT",
+        "Gamma Glutamyl Transferase (GGT)",
         min_value=0.0,
-        value=30.0
+        value=30.0,
+        step=0.1
     )
 
-   
-# ==========================================================
+# ======================================================
 # PREDICTION BUTTON
-# ==========================================================
+# ======================================================
 
-if st.button("Predict HCV Stage"):
+if st.button("Predict HCV Progression", use_container_width=True):
 
-    # ======================================================
+    # ==================================================
     # CREATE INPUT DATAFRAME
-    # ======================================================
+    # ==================================================
 
     input_data = pd.DataFrame(
-        [[
-            ALB,
-            ALP,
-            ALT,
-            AST,
-            BIL,
-            CHE,
-            CHOL,
-            CREA,
-            PROT,
-            GGT
-        ]],
+        [[ALB, ALP, ALT, AST, BIL, CHE, GGT]],
         columns=[
             "ALB",
             "ALP",
@@ -143,55 +124,78 @@ if st.button("Predict HCV Stage"):
             "AST",
             "BIL",
             "CHE",
-            "CHOL",
-            "CREA",
-            "PROT",
             "GGT"
         ]
     )
 
-    # ======================================================
+    # ==================================================
     # SCALING
-    # ======================================================
+    # ==================================================
 
     input_scaled = scaler.transform(input_data)
 
-    # ======================================================
+    # ==================================================
     # PREDICTION
-    # ======================================================
+    # ==================================================
 
     prediction = model.predict(input_scaled)
 
-    predicted_class = label_encoder.inverse_transform(prediction)
+    probabilities = model.predict_proba(input_scaled)
 
-    result = predicted_class[0]
-
-    # ======================================================
-    # PROBABILITY
-    # ======================================================
-
-    probabilities = model.predict_proba(input_scaled)[0]
+    result = label_encoder.inverse_transform(prediction)[0]
 
     confidence = np.max(probabilities) * 100
 
     st.divider()
 
-    # ======================================================
+    # ==================================================
     # RESULT
-    # ======================================================
+    # ==================================================
 
     st.subheader("Prediction Result")
 
-    st.success(f"Prediction Result: {result}")
+    st.success(f"Predicted Class: {result}")
+
+    # ==================================================
+    # CONFIDENCE SCORE
+    # ==================================================
+
+    st.subheader("Confidence Score")
 
     st.metric(
-        "Confidence Score",
-        f"{confidence:.2f}%"
+        label="Model Confidence",
+        value=f"{confidence:.2f}%"
     )
 
-    # ======================================================
+    # ==================================================
+    # PROGRESSION RISK
+    # ==================================================
+
+    st.subheader("Progression Risk")
+
+    if result == "Blood Donor":
+
+        st.success("Low Risk")
+
+    elif result == "Suspect Blood Donor":
+
+        st.warning("Low to Moderate Risk")
+
+    elif result == "Hepatitis":
+
+        st.warning("Moderate Risk")
+
+    elif result == "Fibrosis":
+
+        st.error("High Risk")
+
+    elif result == "Cirrhosis":
+
+        st.error("Very High Risk")
+
+    # ==================================================
     # RECOMMENDED ACTION
-    # ======================================================
+    # ==================================================
 
     st.subheader("Recommended Action")
 
@@ -230,67 +234,57 @@ if st.button("Predict HCV Stage"):
             "Seek immediate medical consultation for comprehensive evaluation and management."
         )
 
-    # ======================================================
-    # PROBABILITY CHART
-    # ======================================================
+    # ==================================================
+    # PROBABILITY DISTRIBUTION
+    # ==================================================
 
-    st.subheader("Prediction Probability Chart")
+    st.subheader("Prediction Probability Distribution")
 
     class_names = label_encoder.classes_
 
     prob_df = pd.DataFrame({
         "Class": class_names,
-        "Probability (%)": probabilities * 100
+        "Probability (%)": probabilities[0] * 100
     })
 
-    fig, ax = plt.subplots(figsize=(8, 4))
-
-    bars = ax.bar(
-        prob_df["Class"],
-        prob_df["Probability (%)"]
+    fig = px.bar(
+        prob_df,
+        x="Class",
+        y="Probability (%)",
+        text="Probability (%)",
+        title="Class Prediction Probability"
     )
 
-    ax.set_ylabel("Probability (%)")
-    ax.set_xlabel("Disease Stage")
-    ax.set_title("Prediction Probability Distribution")
+    fig.update_traces(
+        texttemplate="%{text:.2f}",
+        textposition="outside"
+    )
 
-    for bar in bars:
-
-        height = bar.get_height()
-
-        ax.text(
-            bar.get_x() + bar.get_width()/2,
-            height,
-            f"{height:.1f}%",
-            ha="center",
-            va="bottom"
-        )
-
-    plt.xticks(rotation=15)
-
-    st.pyplot(fig)
-
-    # ======================================================
-    # PROBABILITY TABLE
-    # ======================================================
-
-    st.subheader("Probability Distribution Table")
-
-    st.dataframe(
-        prob_df.sort_values(
-            by="Probability (%)",
-            ascending=False
-        ),
+    st.plotly_chart(
+        fig,
         use_container_width=True
     )
 
-# ==========================================================
-# FOOTER
-# ==========================================================
+    # ==================================================
+    # PROBABILITY TABLE
+    # ==================================================
 
-st.markdown("---")
+    st.subheader("Detailed Probability Table")
+
+    st.dataframe(
+        prob_df.style.format({
+            "Probability (%)": "{:.2f}"
+        }),
+        use_container_width=True
+    )
+
+# ======================================================
+# DISCLAIMER
+# ======================================================
+
+st.divider()
 
 st.caption(
-    "Final Year Project: Prediction of HCV Progression Using Liver Biomarkers "
-    "with Random Forest Machine Learning Model"
+    "Disclaimer: This system is developed for academic and research purposes only. "
+    "The prediction results should not be used as a substitute for professional medical diagnosis, treatment, or clinical decision-making."
 )
