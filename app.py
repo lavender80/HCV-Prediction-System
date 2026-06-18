@@ -203,40 +203,46 @@ if st.button("Predict HCV Progression", use_container_width=True):
 
     st.subheader("Recommended Action")
 
-    if result == "Blood Donor":
+    result_clean = str(result).strip().lower()
+
+    if "blood donor" in result_clean and "suspect" not in result_clean:
 
         st.info(
             "The liver biomarker profile appears normal. "
             "Continue maintaining a healthy lifestyle and attend routine health screenings."
         )
 
-    elif result == "Suspect Blood Donor":
+    elif "suspect blood donor" in result_clean:
 
         st.warning(
             "Some liver biomarker values may require further observation. "
             "It is recommended to repeat liver function tests and consult a healthcare professional if symptoms occur."
         )
 
-    elif result == "Hepatitis":
+    elif "hepatitis" in result_clean:
 
         st.error(
             "The prediction suggests possible Hepatitis. "
             "Please consult a doctor or hepatologist for further medical evaluation and diagnostic testing."
         )
 
-    elif result == "Fibrosis":
+    elif "fibrosis" in result_clean:
 
         st.error(
             "The prediction suggests possible liver fibrosis. "
             "Medical assessment is recommended to determine the extent of liver damage and appropriate treatment."
         )
 
-    elif result == "Cirrhosis":
+    elif "cirrhosis" in result_clean:
 
         st.error(
             "The prediction suggests possible liver cirrhosis. "
             "Seek immediate medical consultation for comprehensive evaluation and management."
         )
+
+    else:
+
+        st.warning(f"No recommendation found for: {result}")
 
     # ==================================================
     # PROBABILITY DISTRIBUTION
