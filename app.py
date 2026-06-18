@@ -142,7 +142,7 @@ if st.button("Predict HCV Progression", use_container_width=True):
 
     probabilities = model.predict_proba(input_scaled)
 
-    result = label_encoder.inverse_transform(prediction)[0]
+    result = str(label_encoder.inverse_transform(prediction)[0]).strip()
 
     confidence = np.max(probabilities) * 100
 
@@ -173,25 +173,29 @@ if st.button("Predict HCV Progression", use_container_width=True):
 
     st.subheader("Progression Risk")
 
-    if result == "Blood Donor":
+    if "Blood Donor" in result and "Suspect" not in result:
 
         st.success("Low Risk")
 
-    elif result == "Suspect Blood Donor":
+    elif "Suspect Blood Donor" in result:
 
         st.warning("Low to Moderate Risk")
 
-    elif result == "Hepatitis":
+    elif "Hepatitis" in result:
 
         st.warning("Moderate Risk")
 
-    elif result == "Fibrosis":
+    elif "Fibrosis" in result:
 
         st.error("High Risk")
 
-    elif result == "Cirrhosis":
+    elif "Cirrhosis" in result:
 
         st.error("Very High Risk")
+
+    else:
+
+        st.info("Risk level unavailable")
 
     # ==================================================
     # RECOMMENDED ACTION
